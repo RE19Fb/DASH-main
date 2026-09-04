@@ -81,12 +81,20 @@ export function updateComment(id: number, payload: { estado?: string; canal?: st
   return request(`/comentarios/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
 }
 
+export function deleteComment(id: number) {
+  return request<void>(`/comentarios/${id}`, { method: 'DELETE' });
+}
+
 export function createAttentionTime(payload: { cliente_id?: number; comentario_id?: number; tiempo_minutos: number; operador?: string }) {
   return request('/tiempos-atencion/', { method: 'POST', body: JSON.stringify(payload) });
 }
 
 export function updateAttentionTime(id: number, payload: { tiempo_minutos?: number; operador?: string; fecha?: string }) {
   return request(`/tiempos-atencion/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+}
+
+export function deleteAttentionTime(id: number) {
+  return request<void>(`/tiempos-atencion/${id}`, { method: 'DELETE' });
 }
 
 export function analyzeText(texto: string) {
@@ -128,6 +136,14 @@ export async function fetchAttentionTimes() {
 
 export async function fetchOptimizations() {
   return request<Array<{ id: number; nombre: string; descripcion?: string; estado: string; resultado?: { ahorro_porcentual?: number; roi?: number } }>>('/optimizaciones/');
+}
+
+export function updateOptimization(id: number, payload: { nombre?: string; descripcion?: string; estado?: string }) {
+  return request(`/optimizaciones/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+}
+
+export function deleteOptimization(id: number) {
+  return request<void>(`/optimizaciones/${id}`, { method: 'DELETE' });
 }
 
 export async function fetchUsers() {

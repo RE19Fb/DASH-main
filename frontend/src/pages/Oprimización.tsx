@@ -1,5 +1,5 @@
 import { AppLayout } from '../layouts/AppLayout';
-import { fetchOptimizations } from '../services/backend';
+import { deleteOptimization, fetchOptimizations, updateOptimization } from '../services/backend';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { OptimizationScenario } from '../types';
@@ -23,8 +23,10 @@ export default function OptimizacionPage({ activeView = 'optimizacion', onSelect
   const [resources, setResources] = useState('recurso_a=3,recurso_b=5');
   const [optimizationResult, setOptimizationResult] = useState('');
 	const [showForm, setShowForm] = useState(false);
-  const loadScenarios = () => { void fetchOptimizations().then((items) => setScenarios(items.map((item) => ({ name: item.nombre, description: item.descripcion ?? '', impact: item.resultado?.ahorro_porcentual ? `Ahorro ${item.resultado.ahorro_porcentual}%` : 'Sin impacto calculado', roi: item.resultado?.roi ? `${item.resultado.roi}x` : 'N/D', status: item.estado === 'disponible' ? 'Disponible' : item.estado === 'en_prueba' ? 'En prueba' : 'Pendiente' })))).catch(() => setScenarios([])); };
+  const loadScenarios = () => { void fetchOptimizations().then((items) => setScenarios(items.map((item) => ({ id: item.id, name: item.nombre, description: item.descripcion ?? '', impact: item.resultado?.ahorro_porcentual ? `Ahorro ${item.resultado.ahorro_porcentual}%` : 'Sin impacto calculado', roi: item.resultado?.roi ? `${item.resultado.roi}x` : 'N/D', status: item.estado === 'disponible' ? 'Disponible' : item.estado === 'en_prueba' ? 'En prueba' : 'Pendiente' })))).catch(() => setScenarios([])); };
   useEffect(() => { loadScenarios(); }, []);
+  const removeScenario = (id?: number) => { if (id && window.confirm('¿Eliminar este escenario?')) void deleteOptimization(id).then(loadScenarios); };
+  const toggleScenario = (scenario: OptimizationScenario) => { if (scenario.id) void updateOptimization(scenario.id, { estado: scenario.status === 'Disponible' ? 'pendiente' : 'disponible' }).then(loadScenarios); };
   const PageWrapper = embedded
     ? ({ children }: { children: ReactNode }) => <>{children}</>
     : ({ children }: { children: ReactNode }) => <AppLayout activeView={activeView} onSelectView={onSelectView}>{children}</AppLayout>;
@@ -40,7 +42,7 @@ export default function OptimizacionPage({ activeView = 'optimizacion', onSelect
         </div>
       </header>
       <div className="dashboard-export"><ExportMenu onExport={exportar} /></div>
-      <section className="panel scientific-tools"><div className="panel-header"><h3>EJECUTAR OPTIMIZACIÓN SCIPY</h3><button type="button" className="mini-btn primary" onClick={() => setShowForm(true)}>Nuevo escenario</button></div>{showForm && <div className="config-form"><input value={scenarioName} onChange={(event) => setScenarioName(event.target.value)} placeholder="Nombre del escenario" /><input value={resources} onChange={(event) => setResources(event.target.value)} placeholder="recurso_a=3,recurso_b=5" /><button type="button" className="mini-btn" onClick={() => { const recursos = Object.fromEntries(resources.split(',').map((pair) => pair.split('=').map((value) => value.trim())).filter((pair) => pair.length === 2).map(([key, value]) => [key, Number(value)])); void optimizeScenario(scenarioName || 'Escenario sin nombre', recursos).then((data) => { setOptimizationResult(JSON.stringify(data)); setShowForm(false); return fetchOptimizations(); }).then((items) => setScenarios(items.map((item) => ({ name: item.nombre, description: item.descripcion ?? '', impact: item.resultado?.ahorro_porcentual ? `Ahorro ${item.resultado.ahorro_porcentual}%` : 'Sin impacto calculado', roi: item.resultado?.roi ? `${item.resultado.roi}x` : 'N/D', status: item.estado === 'disponible' ? 'Disponible' : item.estado === 'en_prueba' ? 'En prueba' : 'Pendiente' })))).catch(() => setOptimizationResult('No se pudo ejecutar la optimización')); }}>Ejecutar</button><button type="button" className="mini-btn" onClick={() => setShowForm(false)}>Cancelar</button></div>}{optimizationResult && <pre className="result-box">{optimizationResult}</pre>}</section>
+      <section className="panel scientific-tools"><div className="panel-header"><h3>EJECUTAR OPTIMIZACIÓN SCIPY</h3><button type="button" className="mini-btn primary" onClick={() => setShowForm(true)}>Nuevo escenario</button></div>{showForm && <div className="config-form"><input value={scenarioName} onChange={(event) => setScenarioName(event.target.value)} placeholder="Nombre del escenario" /><input value={resources} onChange={(event) => setResources(event.target.value)} placeholder="recurso_a=3,recurso_b=5" /><button type="button" className="mini-btn" onClick={() => { const recursos = Object.fromEntries(resources.split(',').map((pair) => pair.split('=').map((value) => value.trim())).filter((pair) => pair.length === 2).map(([key, value]) => [key, Number(value)])); void optimizeScenario(scenarioName || 'Escenario sin nombre', recursos).then((data) => { setOptimizationResult(JSON.stringify(data)); setShowForm(false); return fetchOptimizations(); }).then((items) => setScenarios(items.map((item) => ({ id: item.id, name: item.nombre, description: item.descripcion ?? '', impact: item.resultado?.ahorro_porcentual ? `Ahorro ${item.resultado.ahorro_porcentual}%` : 'Sin impacto calculado', roi: item.resultado?.roi ? `${item.resultado.roi}x` : 'N/D', status: item.estado === 'disponible' ? 'Disponible' : item.estado === 'en_prueba' ? 'En prueba' : 'Pendiente' })))).catch(() => setOptimizationResult('No se pudo ejecutar la optimización')); }}>Ejecutar</button><button type="button" className="mini-btn" onClick={() => setShowForm(false)}>Cancelar</button></div>}{optimizationResult && <pre className="result-box">{optimizationResult}</pre>}</section>
 
       <div className="stats-grid">
         {[
@@ -75,10 +77,8 @@ export default function OptimizacionPage({ activeView = 'optimizacion', onSelect
                   <span className={`status-pill ${scenario.status.toLowerCase().replace(/\s+/g, '-')}`}>{scenario.status}</span>
                 </div>
                 <p>{scenario.description}</p>
-                <div className="scenario-meta">
-                  <span>Impacto: {scenario.impact}</span>
-                  <span>ROI: {scenario.roi}</span>
-                </div>
+                <div className="scenario-meta"><span>Impacto: {scenario.impact}</span><span>ROI: {scenario.roi}</span></div>
+                <div className="row-actions scenario-actions"><button type="button" className="mini-btn" onClick={() => toggleScenario(scenario)}>{scenario.status === 'Disponible' ? 'Pausar' : 'Activar'}</button><button type="button" className="mini-btn danger-btn" onClick={() => removeScenario(scenario.id)}>Eliminar</button></div>
               </article>
             ))}
           </div>

@@ -80,6 +80,7 @@ export interface MetricSnapshot {
 }
 
 export interface OptimizationScenario {
+  id?: number;
   name: string;
   description: string;
   impact: string;

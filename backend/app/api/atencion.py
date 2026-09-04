@@ -64,3 +64,16 @@ async def listar_tiempos_atencion(
                 select(TiempoAtencionDB).order_by(TiempoAtencionDB.fecha.desc(), TiempoAtencionDB.id.desc())
         )
         return resultado.scalars().all()
+
+
+@router.delete("/{tiempo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def eliminar_tiempo_atencion(
+        tiempo_id: int,
+        db: AsyncSession = Depends(get_db),
+        _: dict = Depends(get_current_user),
+):
+        tiempo = await db.get(TiempoAtencionDB, tiempo_id)
+        if tiempo is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="El tiempo de atención no existe")
+        await db.delete(tiempo)
+        await db.commit()
