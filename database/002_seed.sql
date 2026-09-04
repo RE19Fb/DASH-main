@@ -10,6 +10,39 @@ SELECT setval(pg_get_serial_sequence('metricas_estadisticas', 'id'), COALESCE(MA
 SELECT setval(pg_get_serial_sequence('optimizaciones', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM optimizaciones;
 SELECT setval(pg_get_serial_sequence('auditoria', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM auditoria;
 
+-- Normaliza únicamente los registros demo creados por este seed.
+UPDATE categorias
+SET activo = FALSE
+WHERE nombre LIKE 'DEMO_%';
+
+UPDATE comentarios
+SET procesado = CASE WHEN estado = 'resuelto' THEN TRUE ELSE FALSE END
+WHERE contenido LIKE 'Comentario demo %';
+
+UPDATE tiempos_atencion AS tiempos
+SET tiempo_minutos = (10 + (demo.serie % 16))::numeric(10, 2)
+FROM comentarios AS comentarios
+CROSS JOIN LATERAL (
+	SELECT regexp_replace(comentarios.contenido, '\D', '', 'g')::integer AS serie
+) AS demo
+WHERE tiempos.comentario_id = comentarios.id
+	AND comentarios.contenido LIKE 'Comentario demo %'
+	AND demo.serie BETWEEN 1 AND 100;
+
+UPDATE optimizaciones
+SET parametros_entrada = jsonb_build_object(
+		'recurso_a', 3 + (substring(optimizaciones.nombre FROM '[0-9]+')::integer % 8),
+		'recurso_b', 5 + (substring(optimizaciones.nombre FROM '[0-9]+')::integer % 10)
+	),
+	resultado = jsonb_build_object(
+		'ahorro_porcentual', round((100 + substring(optimizaciones.nombre FROM '[0-9]+')::integer * 2)::numeric / (1000 + substring(optimizaciones.nombre FROM '[0-9]+')::integer * 10) * 100, 2),
+		'roi', round((1000 + substring(optimizaciones.nombre FROM '[0-9]+')::integer * 10)::numeric / (900 + substring(optimizaciones.nombre FROM '[0-9]+')::integer * 8), 2)
+	),
+	costo_inicial = (1000 + substring(optimizaciones.nombre FROM '[0-9]+')::integer * 10)::numeric(14, 4),
+	costo_optimizado = (900 + substring(optimizaciones.nombre FROM '[0-9]+')::integer * 8)::numeric(14, 4)
+WHERE optimizaciones.nombre LIKE 'Optimización demo %'
+	AND substring(optimizaciones.nombre FROM '[0-9]+')::integer BETWEEN 1 AND 100;
+
 INSERT INTO categorias (nombre, descripcion)
 VALUES
 	('VENTAS', 'Consultas y oportunidades comerciales'),
@@ -90,13 +123,6 @@ WHERE NOT EXISTS (
 	SELECT 1 FROM clientes WHERE clientes.email = 'demo.cliente.' || datos.serie || '@example.com'
 );
 
-INSERT INTO categorias (nombre, descripcion)
-SELECT 'DEMO_' || lpad(serie::text, 3, '0'), 'Categoría de demostración ' || serie
-FROM generate_series(1, 100) AS datos(serie)
-WHERE NOT EXISTS (
-	SELECT 1 FROM categorias WHERE categorias.nombre = 'DEMO_' || lpad(datos.serie::text, 3, '0')
-);
-
 INSERT INTO comentarios (cliente_id, contenido, canal, estado, categoria, fecha, procesado)
 SELECT (
 		   SELECT id FROM clientes
@@ -134,7 +160,7 @@ WHERE NOT EXISTS (
 INSERT INTO tiempos_atencion (cliente_id, comentario_id, tiempo_minutos, fecha, operador)
 SELECT comentarios.cliente_id,
 	   comentarios.id,
-	   (8 + (serie % 45))::numeric(10, 2),
+	   (10 + (serie % 16))::numeric(10, 2),
 	   CURRENT_DATE - (serie % 30),
 	   'Operador demo ' || ((serie - 1) % 10 + 1)
 FROM generate_series(1, 100) AS datos(serie)
@@ -149,14 +175,14 @@ INSERT INTO metricas_estadisticas (
 )
 SELECT CURRENT_DATE - serie,
 	   CURRENT_DATE - serie,
-	   10 + serie,
-	   (15 + serie / 10.0)::numeric(12, 4),
-	   (14 + serie / 10.0)::numeric(12, 4),
-	   (2 + serie / 20.0)::numeric(12, 4),
-	   5,
-	   60 + serie,
-	   (10 + serie / 10.0)::numeric(12, 4),
-	   (20 + serie / 10.0)::numeric(12, 4)
+	   10 + (serie % 21),
+	   (15 + (serie % 10) * 0.7)::numeric(12, 4),
+	   (14 + (serie % 10) * 0.7)::numeric(12, 4),
+	   (1.5 + (serie % 8) * 0.35)::numeric(12, 4),
+	   8 + (serie % 5),
+	   30 + (serie % 16),
+	   (9 + (serie % 8) * 0.4)::numeric(12, 4),
+	   (20 + (serie % 8) * 0.5)::numeric(12, 4)
 FROM generate_series(1, 100) AS datos(serie)
 WHERE NOT EXISTS (
 	SELECT 1 FROM metricas_estadisticas
@@ -169,8 +195,11 @@ INSERT INTO optimizaciones (
 )
 SELECT 'Optimización demo ' || serie,
 	   'Escenario de demostración ' || serie,
-	   jsonb_build_object('recursos', 5 + serie, 'escenario', serie),
-	   jsonb_build_object('ahorro_porcentual', (serie % 30) + 1, 'roi', (serie % 20) + 1),
+	   jsonb_build_object('recurso_a', 3 + (serie % 8), 'recurso_b', 5 + (serie % 10)),
+	   jsonb_build_object(
+		   'ahorro_porcentual', round((100 + serie * 2)::numeric / (1000 + serie * 10) * 100, 2),
+		   'roi', round((1000 + serie * 10)::numeric / (900 + serie * 8), 2)
+	   ),
 	   (1000 + serie * 10)::numeric(14, 4),
 	   (900 + serie * 8)::numeric(14, 4),
 	   (ARRAY['pendiente', 'en_proceso', 'completado'])[1 + (serie % 3)]
