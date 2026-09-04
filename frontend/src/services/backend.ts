@@ -59,6 +59,7 @@ export async function fetchComments(): Promise<CommentRecord[]> {
     id: comment.id,
     client: comment.cliente_id ? clientNames.get(comment.cliente_id) ?? `Cliente #${comment.cliente_id}` : 'Sin cliente',
     sentiment: comment.categoria === 'RECLAMO' ? 'Negativo' : comment.categoria === 'FELICITACION' ? 'Positivo' : 'Neutral',
+<<<<<<< HEAD
     category: categoryToUi(comment.categoria),
     text: comment.contenido,
     rating: 0,
@@ -71,6 +72,14 @@ export async function fetchComments(): Promise<CommentRecord[]> {
 }
 
 export function createComment(payload: { contenido: string; canal: string; cliente_id?: number; estado?: string }): Promise<{ id: number }> {
+=======
+    category: categoryToUi(comment.categoria), text: comment.contenido, rating: 0,
+    source: comment.canal, priority: comment.categoria === 'RECLAMO' ? 'Alta' : 'Media', status: comment.estado, date: comment.fecha, responseTime: responseTimes.has(comment.id) ? `${responseTimes.get(comment.id)} min` : 'Sin registrar',
+  }));
+}
+
+export function createComment(payload: { contenido: string; canal: string; cliente_id?: number; estado?: string }) {
+>>>>>>> 27d17fb (Ajuste)
   return request<{ id: number }>('/comentarios/', { method: 'POST', body: JSON.stringify(payload) });
 }
 
