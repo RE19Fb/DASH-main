@@ -1,4 +1,15 @@
 
+-- Alinea las secuencias por si hubo inserts manuales sin actualizar BIGSERIAL.
+SELECT setval(pg_get_serial_sequence('usuarios', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM usuarios;
+SELECT setval(pg_get_serial_sequence('clientes', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM clientes;
+SELECT setval(pg_get_serial_sequence('categorias', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM categorias;
+SELECT setval(pg_get_serial_sequence('comentarios', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM comentarios;
+SELECT setval(pg_get_serial_sequence('analisis_nlp', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM analisis_nlp;
+SELECT setval(pg_get_serial_sequence('tiempos_atencion', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM tiempos_atencion;
+SELECT setval(pg_get_serial_sequence('metricas_estadisticas', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM metricas_estadisticas;
+SELECT setval(pg_get_serial_sequence('optimizaciones', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM optimizaciones;
+SELECT setval(pg_get_serial_sequence('auditoria', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM auditoria;
+
 INSERT INTO categorias (nombre, descripcion)
 VALUES
 	('VENTAS', 'Consultas y oportunidades comerciales'),
@@ -55,3 +66,130 @@ FROM (VALUES
 ) AS datos(contenido, cantidad, palabras, frecuentes)
 JOIN comentarios ON comentarios.contenido = datos.contenido
 WHERE NOT EXISTS (SELECT 1 FROM analisis_nlp WHERE analisis_nlp.comentario_id = comentarios.id);
+
+-- Datos de demostración adicionales: 100 registros por tabla.
+INSERT INTO usuarios (nombre, email, password_hash, rol, activo)
+SELECT 'Usuario demo ' || serie,
+	   'demo.usuario.' || serie || '@example.com',
+	   'demo-password-hash',
+	   (ARRAY['USUARIO', 'ANALISTA', 'SUPERVISOR'])[1 + (serie % 3)],
+	   serie % 10 <> 0
+FROM generate_series(1, 100) AS datos(serie)
+WHERE NOT EXISTS (
+	SELECT 1 FROM usuarios WHERE usuarios.email = 'demo.usuario.' || datos.serie || '@example.com'
+);
+
+INSERT INTO clientes (nombre, email, telefono, empresa, activo)
+SELECT 'Cliente demo ' || serie,
+	   'demo.cliente.' || serie || '@example.com',
+	   '+34 600 ' || lpad(serie::text, 6, '0'),
+	   'Empresa demo ' || ((serie - 1) % 20 + 1),
+	   serie % 10 <> 0
+FROM generate_series(1, 100) AS datos(serie)
+WHERE NOT EXISTS (
+	SELECT 1 FROM clientes WHERE clientes.email = 'demo.cliente.' || datos.serie || '@example.com'
+);
+
+INSERT INTO categorias (nombre, descripcion)
+SELECT 'DEMO_' || lpad(serie::text, 3, '0'), 'Categoría de demostración ' || serie
+FROM generate_series(1, 100) AS datos(serie)
+WHERE NOT EXISTS (
+	SELECT 1 FROM categorias WHERE categorias.nombre = 'DEMO_' || lpad(datos.serie::text, 3, '0')
+);
+
+INSERT INTO comentarios (cliente_id, contenido, canal, estado, categoria, fecha, procesado)
+SELECT (
+		   SELECT id FROM clientes
+		   WHERE email = 'demo.cliente.' || serie || '@example.com'
+	   ),
+	   'Comentario demo ' || serie || ': seguimiento de atención y servicio.',
+	   (ARRAY['web', 'email', 'chat', 'whatsapp'])[1 + (serie % 4)],
+	   (ARRAY['pendiente', 'en_proceso', 'resuelto', 'cancelado'])[1 + (serie % 4)],
+	   (ARRAY['SOPORTE', 'VENTAS', 'RECLAMO', 'FELICITACION', 'CONSULTA'])[1 + (serie % 5)],
+	   NOW() - (serie || ' hours')::interval,
+	   serie % 4 <> 0
+FROM generate_series(1, 100) AS datos(serie)
+WHERE NOT EXISTS (
+	SELECT 1 FROM comentarios
+	WHERE comentarios.contenido = 'Comentario demo ' || datos.serie || ': seguimiento de atención y servicio.'
+);
+
+INSERT INTO analisis_nlp (
+	comentario_id, idioma, cantidad_palabras, palabras_limpias,
+	palabras_frecuentes, categoria_detectada, confianza
+)
+SELECT comentarios.id,
+	   'es',
+	   9,
+	   jsonb_build_array('comentario', 'demo', serie::text, 'atencion', 'servicio'),
+	   jsonb_build_array('atencion', 'servicio'),
+	   comentarios.categoria,
+	   0.9500
+FROM generate_series(1, 100) AS datos(serie)
+JOIN comentarios ON comentarios.contenido = 'Comentario demo ' || serie || ': seguimiento de atención y servicio.'
+WHERE NOT EXISTS (
+	SELECT 1 FROM analisis_nlp WHERE analisis_nlp.comentario_id = comentarios.id
+);
+
+INSERT INTO tiempos_atencion (cliente_id, comentario_id, tiempo_minutos, fecha, operador)
+SELECT comentarios.cliente_id,
+	   comentarios.id,
+	   (8 + (serie % 45))::numeric(10, 2),
+	   CURRENT_DATE - (serie % 30),
+	   'Operador demo ' || ((serie - 1) % 10 + 1)
+FROM generate_series(1, 100) AS datos(serie)
+JOIN comentarios ON comentarios.contenido = 'Comentario demo ' || serie || ': seguimiento de atención y servicio.'
+WHERE NOT EXISTS (
+	SELECT 1 FROM tiempos_atencion WHERE tiempos_atencion.comentario_id = comentarios.id
+);
+
+INSERT INTO metricas_estadisticas (
+	fecha_inicio, fecha_fin, cantidad_registros, media, mediana,
+	desviacion_estandar, minimo, maximo, percentil_25, percentil_75
+)
+SELECT CURRENT_DATE - serie,
+	   CURRENT_DATE - serie,
+	   10 + serie,
+	   (15 + serie / 10.0)::numeric(12, 4),
+	   (14 + serie / 10.0)::numeric(12, 4),
+	   (2 + serie / 20.0)::numeric(12, 4),
+	   5,
+	   60 + serie,
+	   (10 + serie / 10.0)::numeric(12, 4),
+	   (20 + serie / 10.0)::numeric(12, 4)
+FROM generate_series(1, 100) AS datos(serie)
+WHERE NOT EXISTS (
+	SELECT 1 FROM metricas_estadisticas
+	WHERE metricas_estadisticas.fecha_inicio = CURRENT_DATE - datos.serie
+);
+
+INSERT INTO optimizaciones (
+	nombre, descripcion, parametros_entrada, resultado,
+	costo_inicial, costo_optimizado, estado
+)
+SELECT 'Optimización demo ' || serie,
+	   'Escenario de demostración ' || serie,
+	   jsonb_build_object('recursos', 5 + serie, 'escenario', serie),
+	   jsonb_build_object('ahorro_porcentual', (serie % 30) + 1, 'roi', (serie % 20) + 1),
+	   (1000 + serie * 10)::numeric(14, 4),
+	   (900 + serie * 8)::numeric(14, 4),
+	   (ARRAY['pendiente', 'en_proceso', 'completado'])[1 + (serie % 3)]
+FROM generate_series(1, 100) AS datos(serie)
+WHERE NOT EXISTS (
+	SELECT 1 FROM optimizaciones
+	WHERE optimizaciones.nombre = 'Optimización demo ' || datos.serie
+);
+
+INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, detalles, ip)
+SELECT (SELECT id FROM usuarios WHERE email = 'demo.usuario.' || serie || '@example.com'),
+	   'DEMO',
+	   (ARRAY['usuarios', 'clientes', 'comentarios', 'categorias'])[1 + (serie % 4)],
+	   serie,
+	   jsonb_build_object('origen', 'seed', 'serie', serie),
+	   '127.0.0.1'
+FROM generate_series(1, 100) AS datos(serie)
+WHERE NOT EXISTS (
+	SELECT 1 FROM auditoria
+	WHERE auditoria.accion = 'DEMO'
+	  AND auditoria.detalles ->> 'serie' = datos.serie::text
+);
