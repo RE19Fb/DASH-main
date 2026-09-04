@@ -4,7 +4,7 @@ import { CommentFilters } from '../components/comentarios/CommentFilters';
 import type { ViewKey } from '../types';
 import { ExportMenu, exportRows, type ExportFormat } from '../utils/exports';
 import { createComment } from '../services/backend';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { fetchClients, createAttentionTime, fetchAttentionTimes, updateAttentionTime, updateComment } from '../services/backend';
 import { ListLimit } from '../components/ui/ListLimit';
 import { useVisibleRecords } from '../hooks/useVisibleRecords';
@@ -25,6 +25,19 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
   const [editingTimeId, setEditingTimeId] = useState<number | null>(null);
   const [editingTime, setEditingTime] = useState({ tiempo_minutos: '', operador: '' });
   const visibleAttentionTimes = useVisibleRecords(attentionTimes);
+  const telemetry = useMemo(() => {
+    const totalMinutes = attentionTimes.reduce((sum, item) => sum + Number(item.tiempo_minutos), 0);
+    const buckets = [
+      { label: '0-10 min', total: attentionTimes.filter((item) => Number(item.tiempo_minutos) <= 10).reduce((sum, item) => sum + Number(item.tiempo_minutos), 0), color: '#5dc1a8' },
+      { label: '11-20 min', total: attentionTimes.filter((item) => Number(item.tiempo_minutos) > 10 && Number(item.tiempo_minutos) <= 20).reduce((sum, item) => sum + Number(item.tiempo_minutos), 0), color: '#3a6ea8' },
+      { label: '21-30 min', total: attentionTimes.filter((item) => Number(item.tiempo_minutos) > 20 && Number(item.tiempo_minutos) <= 30).reduce((sum, item) => sum + Number(item.tiempo_minutos), 0), color: '#b07a1a' },
+      { label: '31+ min', total: attentionTimes.filter((item) => Number(item.tiempo_minutos) > 30).reduce((sum, item) => sum + Number(item.tiempo_minutos), 0), color: '#9d3e3e' },
+    ].map((item) => ({ ...item, percentage: totalMinutes ? item.total / totalMinutes * 100 : 0 }));
+    const countBy = (values: string[]) => Object.entries(values.reduce<Record<string, number>>((result, value) => { result[value] = (result[value] ?? 0) + 1; return result; }, {})).sort(([, first], [, second]) => second - first);
+    const channelCounts = countBy(comentarios.map((item) => item.source));
+    const statusCounts = countBy(comentarios.map((item) => item.status ?? 'sin estado'));
+    return { totalMinutes, average: attentionTimes.length ? totalMinutes / attentionTimes.length : 0, maximum: Math.max(0, ...attentionTimes.map((item) => Number(item.tiempo_minutos))), buckets, channelCounts, statusCounts };
+  }, [attentionTimes, comentarios]);
   useEffect(() => { void fetchClients().then((items) => setClients(items.map((item) => ({ id: item.id, nombre: item.name })))).catch(() => setClients([])); }, []);
   const loadAttentionTimes = () => { void fetchAttentionTimes().then(setAttentionTimes).catch(() => setAttentionTimes([])); };
   useEffect(() => { loadAttentionTimes(); }, []);
@@ -153,6 +166,19 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
         <section className="panel table-panel">
           <div className="panel-header"><h3>TIEMPOS DE ATENCIÓN REGISTRADOS</h3><div className="header-actions"><button type="button" className="mini-btn primary" onClick={() => setShowCommentForm(true)}>Nuevo registro de atención</button><button type="button" className="mini-btn" onClick={loadAttentionTimes}>Actualizar</button></div></div>
           <table className="data-table"><thead><tr><th>ID</th><th>Cliente</th><th>Comentario</th><th>Tiempo registrado</th><th>Operador</th><th>Fecha de creación</th><th>Acciones</th></tr></thead><tbody>{visibleAttentionTimes.visibleRecords.map((time) => <tr key={time.id}><td>{time.id}</td><td>{time.cliente_id ?? 'N/D'}</td><td>{time.comentario_id ?? 'N/D'}</td><td>{editingTimeId === time.id ? <><span className="inline-label">Editar tiempo de atención</span><input aria-label={`Editar tiempo de atención ${time.id}`} type="number" min="0" step="0.01" value={editingTime.tiempo_minutos} onChange={(event) => setEditingTime({ ...editingTime, tiempo_minutos: event.target.value })} /></> : `${time.tiempo_minutos} min`}</td><td>{editingTimeId === time.id ? <input aria-label={`Editar operador ${time.id}`} value={editingTime.operador} onChange={(event) => setEditingTime({ ...editingTime, operador: event.target.value })} /> : time.operador || 'N/D'}</td><td>{time.fecha ? new Date(time.fecha).toLocaleDateString('es-ES') : 'N/D'}</td><td>{editingTimeId === time.id ? <><button type="button" className="mini-btn primary" onClick={() => saveAttentionTime(time.id)}>Guardar modificación</button><button type="button" className="mini-btn" onClick={() => setEditingTimeId(null)}>Cancelar</button></> : <button type="button" className="mini-btn" onClick={() => { setEditingTimeId(time.id); setEditingTime({ tiempo_minutos: String(time.tiempo_minutos), operador: time.operador ?? '' }); }}>Editar registro</button>}</td></tr>)}</tbody></table><ListLimit total={attentionTimes.length} label="tiempos" onChange={visibleAttentionTimes.setShowAll} />{attentionTimes.length === 0 && <div className="empty-state"><h4>No hay tiempos registrados</h4><p>Los tiempos guardados aparecerán aquí.</p></div>}
+        </section>
+        <section className="attention-telemetry-grid">
+          <section className="panel telemetry-panel">
+            <div className="panel-header"><div><h3>TELEMETRÍA DE TIEMPOS</h3><p className="panel-subtitle">Distribución porcentual sobre el total registrado</p></div><span className="telemetry-total">{telemetry.totalMinutes.toFixed(0)} min</span></div>
+            <div className="telemetry-kpis"><div><span>Media</span><strong>{telemetry.average.toFixed(1)} min</strong></div><div><span>Máximo</span><strong>{telemetry.maximum.toFixed(0)} min</strong></div><div><span>Registros</span><strong>{attentionTimes.length}</strong></div></div>
+            <div className="telemetry-bars">{telemetry.buckets.map((bucket) => <div className="telemetry-bar-row" key={bucket.label}><div><span>{bucket.label}</span><strong>{bucket.percentage.toFixed(1)}%</strong></div><div className="track"><i style={{ width: `${bucket.percentage}%`, background: bucket.color }} /></div></div>)}</div>
+          </section>
+          <section className="panel telemetry-panel">
+            <div className="panel-header"><div><h3>TIPO DE CONSULTA</h3><p className="panel-subtitle">Canales presentes en los comentarios</p></div></div>
+            <div className="telemetry-breakdown">{telemetry.channelCounts.slice(0, 8).map(([label, count], index) => <div key={label}><span><i className={`telemetry-dot dot-${index % 4}`} />{label}</span><strong>{count} <small>{counts.total ? `${Math.round(count / counts.total * 100)}%` : '0%'}</small></strong></div>)}</div>
+            <div className="telemetry-status-title">Estado operativo</div>
+            <div className="telemetry-statuses">{telemetry.statusCounts.slice(0, 6).map(([label, count]) => <span key={label}>{label}: {count}</span>)}</div>
+          </section>
         </section>
         <CommentFilters
           {...filters}

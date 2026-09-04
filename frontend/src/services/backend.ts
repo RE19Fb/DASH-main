@@ -135,23 +135,31 @@ export async function fetchUsers() {
 }
 
 export async function fetchCategories() {
-  return request<Array<{ id: number; nombre: string; activo: boolean }>>('/categorias/');
+  return request<Array<{ id: number; nombre: string; descripcion?: string | null; activo: boolean }>>('/categorias/');
 }
 
 export function createUser(payload: { nombre: string; email: string; password_hash: string; rol: string; activo?: boolean }) {
   return request('/usuarios/', { method: 'POST', body: JSON.stringify(payload) });
 }
 
-export function updateUser(id: number, payload: { activo: boolean }) {
+export function updateUser(id: number, payload: { nombre?: string; email?: string; password_hash?: string; rol?: string; activo?: boolean }) {
   return request(`/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+}
+
+export function deleteUser(id: number) {
+  return request<void>(`/usuarios/${id}`, { method: 'DELETE' });
 }
 
 export function createCategory(payload: { nombre: string; descripcion?: string }) {
   return request('/categorias/', { method: 'POST', body: JSON.stringify(payload) });
 }
 
-export function updateCategory(id: number, payload: { activo: boolean }) {
+export function updateCategory(id: number, payload: { nombre?: string; descripcion?: string; activo?: boolean }) {
   return request(`/categorias/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+}
+
+export function deleteCategory(id: number) {
+  return request<void>(`/categorias/${id}`, { method: 'DELETE' });
 }
 
 export async function fetchAudit() {

@@ -777,6 +777,52 @@ select, .config-form input, .config-form select {
 
 .content-stack { display: flex; flex-direction: column; gap: 18px; }
 
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 18px;
+}
+
+.config-panel { min-width: 0; }
+.config-row { align-items: flex-start; gap: 10px; }
+.config-row > span { min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }
+.row-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; margin-left: auto; }
+.compact-form { gap: 8px; margin-bottom: 12px; }
+.compact-form input, .compact-form select { min-width: 120px; padding: 7px 9px; }
+.compact-summary { margin-top: 16px; margin-bottom: 0; gap: 8px; }
+.compact-summary .summary-card { padding: 10px 11px; border-radius: 8px; }
+.audit-panel { width: 100%; }
+
+.attention-telemetry-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 18px;
+}
+
+.telemetry-panel { min-width: 0; }
+.telemetry-total { color: var(--green-dark); font-weight: 800; font-size: 0.85rem; }
+.telemetry-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
+.telemetry-kpis div { display: grid; gap: 5px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; background: #f8fbf9; }
+.telemetry-kpis span, .telemetry-breakdown small { color: var(--muted); font-size: 0.68rem; }
+.telemetry-kpis strong { font-size: 1rem; }
+.telemetry-bars { display: grid; gap: 14px; }
+.telemetry-bar-row > div:first-child { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.75rem; }
+.telemetry-bar-row strong { color: var(--green-dark); }
+.telemetry-breakdown { display: grid; gap: 11px; }
+.telemetry-breakdown > div { display: flex; justify-content: space-between; gap: 12px; align-items: center; font-size: 0.78rem; }
+.telemetry-breakdown > div > span { display: flex; align-items: center; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.telemetry-breakdown strong { white-space: nowrap; }
+.telemetry-breakdown small { margin-left: 5px; font-weight: 500; }
+.telemetry-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; background: var(--green); }
+.telemetry-dot.dot-1 { background: var(--info); }
+.telemetry-dot.dot-2 { background: var(--warning); }
+.telemetry-dot.dot-3 { background: #9d3e3e; }
+.telemetry-status-title { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+.telemetry-statuses { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.telemetry-statuses span { padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; background: #f8fbf9; color: var(--muted); font-size: 0.68rem; }
+
 .list-limit {
   display: flex;
   align-items: center;
@@ -802,6 +848,14 @@ select, .config-form input, .config-form select {
 
 .table-panel { min-width: 0; overflow: hidden; }
 .table-panel .data-table { display: block; overflow-x: auto; white-space: nowrap; }
+.client-table-panel, .client-history-panel { width: 100%; }
+.client-table-panel .data-table { width: 100%; min-width: 1120px; table-layout: auto; }
+.client-history-panel .data-table { width: 100%; min-width: 760px; }
+.client-history-telemetry { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); gap: 18px; }
+.history-bar-0 { background: var(--green) !important; }
+.history-bar-1 { background: var(--info) !important; }
+.history-bar-2 { background: var(--warning) !important; }
+.history-bar-3 { background: #9d3e3e !important; }
 
 .data-table {
   width: 100%;
@@ -1170,7 +1224,7 @@ select, .config-form input, .config-form select {
 @media (max-width: 980px) {
   .dashboard-layout { flex-direction: column; }
   .sidebar { width: 100%; }
-  .two-col-grid, .bottom-grid, .stats-grid, .metric-grid, .report-list, .summary-cards, .report-visual-grid { grid-template-columns: 1fr; }
+  .two-col-grid, .bottom-grid, .stats-grid, .metric-grid, .report-list, .summary-cards, .report-visual-grid, .attention-telemetry-grid, .client-history-telemetry, .config-grid { grid-template-columns: 1fr; }
   .report-donut-layout { grid-template-columns: 1fr; justify-items: center; }
   .report-legend { width: 100%; }
   .header-panel, .header-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
