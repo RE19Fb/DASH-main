@@ -512,9 +512,11 @@ select, .config-form input, .config-form select {
   grid-template-columns: 1.45fr 1fr;
   gap: 18px;
   margin-bottom: 22px;
+  align-items: start;
 }
 
 .activity-grid { grid-template-columns: 1fr; }
+.analytics-grid { align-items: start; }
 
 .panel {
   background: #ffffff;
@@ -623,6 +625,14 @@ select, .config-form input, .config-form select {
   gap: 12px;
   margin-top: 8px;
 }
+
+.small-panel .category-list {
+  max-height: 246px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.small-panel .category-row { min-height: 32px; }
 
 .category-row {
   display: flex;
@@ -847,10 +857,10 @@ select, .config-form input, .config-form select {
 .list-limit button.active { background: var(--green-soft); border-color: #a9d7bc; color: var(--green-dark); }
 
 .table-panel { min-width: 0; overflow: hidden; }
-.table-panel .data-table { display: block; overflow-x: auto; white-space: nowrap; }
+.table-panel .data-table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
 .client-table-panel, .client-history-panel { width: 100%; }
 .client-table-panel .data-table { width: 100%; min-width: 1120px; table-layout: auto; }
-.client-history-panel .data-table { width: 100%; min-width: 760px; }
+.client-history-panel .data-table { width: 100%; min-width: 760px; table-layout: fixed; }
 .client-history-telemetry { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); gap: 18px; }
 .history-bar-0 { background: var(--green) !important; }
 .history-bar-1 { background: var(--info) !important; }
