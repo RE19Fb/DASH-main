@@ -6,6 +6,8 @@ import type { OptimizationScenario } from '../types';
 import type { ViewKey } from '../types';
 import { ExportMenu, exportRows, type ExportFormat } from '../utils/exports';
 import { optimizeScenario } from '../services/backend';
+import { ListLimit } from '../components/ui/ListLimit';
+import { useVisibleRecords } from '../hooks/useVisibleRecords';
 
 interface PageProps {
   activeView?: ViewKey;
@@ -15,6 +17,7 @@ interface PageProps {
 
 export default function OptimizacionPage({ activeView = 'optimizacion', onSelectView = () => undefined, embedded = false }: PageProps) {
 	const [scenarios, setScenarios] = useState<OptimizationScenario[]>([]);
+  const visibleScenarios = useVisibleRecords(scenarios);
   const exportar = (format: ExportFormat) => exportRows([['Escenario', 'Descripción', 'Impacto', 'ROI'], ...scenarios.map((item) => [item.name, item.description, item.impact, item.roi])], format, 'optimizacion');
   const [scenarioName, setScenarioName] = useState('');
   const [resources, setResources] = useState('recurso_a=3,recurso_b=5');
@@ -65,7 +68,7 @@ export default function OptimizacionPage({ activeView = 'optimizacion', onSelect
           </div>
 
           <div className="scenario-grid">
-            {scenarios.map((scenario) => (
+            {visibleScenarios.visibleRecords.map((scenario) => (
               <article key={scenario.name} className="scenario-card premium-scenario">
                 <div className="scenario-head">
                   <strong>{scenario.name}</strong>
@@ -79,6 +82,7 @@ export default function OptimizacionPage({ activeView = 'optimizacion', onSelect
               </article>
             ))}
           </div>
+          <ListLimit total={scenarios.length} label="escenarios" onChange={visibleScenarios.setShowAll} />
         </div>
 
         <div className="panel panel-strong">

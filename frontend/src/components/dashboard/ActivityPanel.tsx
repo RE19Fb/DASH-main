@@ -1,4 +1,6 @@
 import type { ActivityItem } from '../../types';
+import { useVisibleRecords } from '../../hooks/useVisibleRecords';
+import { ListLimit } from '../ui/ListLimit';
 
 interface ActivityPanelProps {
   items: ActivityItem[];
@@ -6,6 +8,7 @@ interface ActivityPanelProps {
 }
 
 export function ActivityPanel({ items, onRefresh }: ActivityPanelProps) {
+  const { visibleRecords, setShowAll } = useVisibleRecords(items);
   return (
     <div className="panel activity-panel">
       <div className="panel-header">
@@ -14,7 +17,7 @@ export function ActivityPanel({ items, onRefresh }: ActivityPanelProps) {
       </div>
 
       <div className="activity-list">
-        {items.map((item) => (
+        {visibleRecords.map((item) => (
           <div key={item.id} className={`activity-item ${item.type}`}>
             <div className="activity-bullet" />
             <div className="activity-copy">
@@ -25,6 +28,7 @@ export function ActivityPanel({ items, onRefresh }: ActivityPanelProps) {
           </div>
         ))}
       </div>
+      {items.length > 25 && <ListLimit total={items.length} onChange={setShowAll} />}
     </div>
   );
 }

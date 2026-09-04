@@ -1,10 +1,13 @@
 import type { WordCloudItem } from '../../types';
+import { useVisibleRecords } from '../../hooks/useVisibleRecords';
+import { ListLimit } from '../ui/ListLimit';
 
 interface WordCloudPanelProps {
   items: WordCloudItem[];
 }
 
 export function WordCloudPanel({ items }: WordCloudPanelProps) {
+  const { visibleRecords, setShowAll } = useVisibleRecords(items);
   return (
     <div className="panel words-panel">
       <div className="panel-header">
@@ -12,7 +15,7 @@ export function WordCloudPanel({ items }: WordCloudPanelProps) {
       </div>
 
       <div className="word-cloud">
-        {items.map((item) => (
+        {visibleRecords.map((item) => (
           <span
             key={item.word}
             style={{
@@ -24,6 +27,7 @@ export function WordCloudPanel({ items }: WordCloudPanelProps) {
           </span>
         ))}
       </div>
+      {items.length > 25 && <ListLimit total={items.length} label="palabras" onChange={setShowAll} />}
     </div>
   );
 }

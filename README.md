@@ -13,6 +13,11 @@ Dashboard empresarial con React, FastAPI, SciPy, NLTK y Supabase.
 5. Inicia la API: `uvicorn app.main:app --app-dir backend --reload --port 8000`.
 6. Inicia el frontend desde `frontend`: `npm install && npm run dev`.
 
+En Vercel configura la variable `VITE_API_URL` con la URL pública de la API,
+incluyendo `/api` (por ejemplo, `https://mi-api.example.com/api`), y vuelve a
+desplegar. La API no puede ser `localhost` porque ese nombre apunta al equipo
+del visitante de Vercel.
+
 La API usa directamente PostgreSQL de Supabase mediante SQLAlchemy y `asyncpg`.
 `GET /health` comprueba la conexión ejecutando `SELECT 1`.
 También informa las tablas requeridas y `schema_ready`; el arranque no ejecuta

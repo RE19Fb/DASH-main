@@ -2,6 +2,8 @@ import { AppLayout } from '../layouts/AppLayout';
 import { createCategory, createUser, fetchAudit, fetchCategories, fetchUsers, updateCategory, updateUser } from '../services/backend';
 import { useEffect, useState } from 'react';
 import type { ViewKey } from '../types';
+import { ListLimit } from '../components/ui/ListLimit';
+import { useVisibleRecords } from '../hooks/useVisibleRecords';
 
 interface PageProps {
   activeView?: ViewKey;
@@ -16,6 +18,9 @@ export default function ConfiguracionPage({ activeView = 'configuracion', onSele
   const [newUser, setNewUser] = useState({ nombre: '', email: '', password_hash: '', rol: 'USUARIO', activo: true });
   const [showUserForm, setShowUserForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const visibleUsers = useVisibleRecords(users);
+  const visibleCategories = useVisibleRecords(categories);
+  const visibleAudit = useVisibleRecords(audit);
   const load = () => Promise.all([fetchUsers(), fetchCategories(), fetchAudit()]).then(([loadedUsers, loadedCategories, loadedAudit]) => { setUsers(loadedUsers); setCategories(loadedCategories); setAudit(loadedAudit); }).catch(() => { setUsers([]); setCategories([]); setAudit([]); });
   useEffect(() => {
     void load();
@@ -45,7 +50,8 @@ export default function ConfiguracionPage({ activeView = 'configuracion', onSele
             <button type="submit" className="mini-btn">Agregar usuario</button>
             <button type="button" className="mini-btn" onClick={() => setShowUserForm(false)}>Cancelar</button>
           </form>}
-          <div className="category-list">{users.map((user) => <div key={user.id} className="category-row"><span>{user.nombre} · {user.rol} · {user.activo ? 'Activo' : 'Inactivo'}</span><button type="button" className="mini-btn" onClick={() => void updateUser(user.id, { activo: !user.activo }).then(load)}>{user.activo ? 'Desactivar' : 'Activar'}</button></div>)}</div>
+          <div className="category-list">{visibleUsers.visibleRecords.map((user) => <div key={user.id} className="category-row"><span>{user.nombre} · {user.rol} · {user.activo ? 'Activo' : 'Inactivo'}</span><button type="button" className="mini-btn" onClick={() => void updateUser(user.id, { activo: !user.activo }).then(load)}>{user.activo ? 'Desactivar' : 'Activar'}</button></div>)}</div>
+          <ListLimit total={users.length} label="usuarios" onChange={visibleUsers.setShowAll} />
 
           <div className="summary-cards">
             <div className="summary-card">
@@ -75,18 +81,20 @@ export default function ConfiguracionPage({ activeView = 'configuracion', onSele
             <button type="button" className="mini-btn" onClick={() => setShowCategoryForm(false)}>Cancelar</button>
           </form>}
           <div className="category-list">
-            {categories.map((category) => (
+            {visibleCategories.visibleRecords.map((category) => (
               <div key={category.id} className="category-row">
                 <span>{category.nombre}{category.descripcion ? ` · ${category.descripcion}` : ''}{` · ${category.activo ? 'Activo' : 'Inactivo'}`}</span>
                 <button type="button" className="mini-btn" onClick={() => void updateCategory(category.id, { activo: !category.activo }).then(load)}>{category.activo ? 'Desactivar' : 'Activar'}</button>
               </div>
             ))}
           </div>
+          <ListLimit total={categories.length} label="categorías" onChange={visibleCategories.setShowAll} />
         </section>
 
         <section className="panel">
           <div className="panel-header"><h3>AUDITORÍA</h3><button type="button" className="mini-btn" onClick={() => void load()}>Actualizar</button></div>
-          <div className="category-list">{audit.map((entry) => <div key={entry.id} className="category-row"><span>{entry.accion} {entry.tabla ? `· ${entry.tabla}` : ''}</span><strong>{new Date(entry.created_at).toLocaleString('es-ES')}</strong></div>)}</div>
+          <div className="category-list">{visibleAudit.visibleRecords.map((entry) => <div key={entry.id} className="category-row"><span>{entry.accion} {entry.tabla ? `· ${entry.tabla}` : ''}</span><strong>{new Date(entry.created_at).toLocaleString('es-ES')}</strong></div>)}</div>
+          <ListLimit total={audit.length} label="eventos" onChange={visibleAudit.setShowAll} />
         </section>
       </div>
     </AppLayout>

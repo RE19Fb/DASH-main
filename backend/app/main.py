@@ -30,6 +30,7 @@ app = FastAPI(title=settings.PROJECT_NAME, openapi_url="/api/openapi.json", life
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"https://([a-z0-9-]+\.)?(vercel\.app|app\.github\.dev)$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

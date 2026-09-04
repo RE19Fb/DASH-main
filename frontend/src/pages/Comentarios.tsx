@@ -6,6 +6,8 @@ import { ExportMenu, exportRows, type ExportFormat } from '../utils/exports';
 import { createComment } from '../services/backend';
 import { useEffect, useState, type FormEvent } from 'react';
 import { fetchClients, createAttentionTime, fetchAttentionTimes, updateAttentionTime, updateComment } from '../services/backend';
+import { ListLimit } from '../components/ui/ListLimit';
+import { useVisibleRecords } from '../hooks/useVisibleRecords';
 
 interface PageProps {
   activeView?: ViewKey;
@@ -14,6 +16,7 @@ interface PageProps {
 
 export default function ComentariosPage({ activeView = 'comentarios', onSelectView = () => undefined }: PageProps) {
   const { comentarios, filters, setFilters, counts, reload } = useComentarios();
+  const visibleComments = useVisibleRecords(comentarios);
   const [clients, setClients] = useState<Array<{ id: number; nombre: string }>>([]);
   const [newComment, setNewComment] = useState({ contenido: '', canal: 'web', cliente_id: '', estado: 'pendiente', tiempo_minutos: '', operador: '' });
   const [commentMessage, setCommentMessage] = useState('');
@@ -21,6 +24,7 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
   const [attentionTimes, setAttentionTimes] = useState<Array<{ id: number; cliente_id?: number; comentario_id?: number; tiempo_minutos: number; fecha: string; operador?: string }>>([]);
   const [editingTimeId, setEditingTimeId] = useState<number | null>(null);
   const [editingTime, setEditingTime] = useState({ tiempo_minutos: '', operador: '' });
+  const visibleAttentionTimes = useVisibleRecords(attentionTimes);
   useEffect(() => { void fetchClients().then((items) => setClients(items.map((item) => ({ id: item.id, nombre: item.name })))).catch(() => setClients([])); }, []);
   const loadAttentionTimes = () => { void fetchAttentionTimes().then(setAttentionTimes).catch(() => setAttentionTimes([])); };
   useEffect(() => { loadAttentionTimes(); }, []);
@@ -148,7 +152,7 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
         </form>}
         <section className="panel table-panel">
           <div className="panel-header"><h3>TIEMPOS DE ATENCIÓN REGISTRADOS</h3><div className="header-actions"><button type="button" className="mini-btn primary" onClick={() => setShowCommentForm(true)}>Nuevo registro de atención</button><button type="button" className="mini-btn" onClick={loadAttentionTimes}>Actualizar</button></div></div>
-          <table className="data-table"><thead><tr><th>ID</th><th>Cliente</th><th>Comentario</th><th>Tiempo registrado</th><th>Operador</th><th>Fecha de creación</th><th>Acciones</th></tr></thead><tbody>{attentionTimes.map((time) => <tr key={time.id}><td>{time.id}</td><td>{time.cliente_id ?? 'N/D'}</td><td>{time.comentario_id ?? 'N/D'}</td><td>{editingTimeId === time.id ? <><span className="inline-label">Editar tiempo de atención</span><input aria-label={`Editar tiempo de atención ${time.id}`} type="number" min="0" step="0.01" value={editingTime.tiempo_minutos} onChange={(event) => setEditingTime({ ...editingTime, tiempo_minutos: event.target.value })} /></> : `${time.tiempo_minutos} min`}</td><td>{editingTimeId === time.id ? <input aria-label={`Editar operador ${time.id}`} value={editingTime.operador} onChange={(event) => setEditingTime({ ...editingTime, operador: event.target.value })} /> : time.operador || 'N/D'}</td><td>{time.fecha ? new Date(time.fecha).toLocaleDateString('es-ES') : 'N/D'}</td><td>{editingTimeId === time.id ? <><button type="button" className="mini-btn primary" onClick={() => saveAttentionTime(time.id)}>Guardar modificación</button><button type="button" className="mini-btn" onClick={() => setEditingTimeId(null)}>Cancelar</button></> : <button type="button" className="mini-btn" onClick={() => { setEditingTimeId(time.id); setEditingTime({ tiempo_minutos: String(time.tiempo_minutos), operador: time.operador ?? '' }); }}>Editar registro</button>}</td></tr>)}</tbody></table>{attentionTimes.length === 0 && <div className="empty-state"><h4>No hay tiempos registrados</h4><p>Los tiempos guardados aparecerán aquí.</p></div>}
+          <table className="data-table"><thead><tr><th>ID</th><th>Cliente</th><th>Comentario</th><th>Tiempo registrado</th><th>Operador</th><th>Fecha de creación</th><th>Acciones</th></tr></thead><tbody>{visibleAttentionTimes.visibleRecords.map((time) => <tr key={time.id}><td>{time.id}</td><td>{time.cliente_id ?? 'N/D'}</td><td>{time.comentario_id ?? 'N/D'}</td><td>{editingTimeId === time.id ? <><span className="inline-label">Editar tiempo de atención</span><input aria-label={`Editar tiempo de atención ${time.id}`} type="number" min="0" step="0.01" value={editingTime.tiempo_minutos} onChange={(event) => setEditingTime({ ...editingTime, tiempo_minutos: event.target.value })} /></> : `${time.tiempo_minutos} min`}</td><td>{editingTimeId === time.id ? <input aria-label={`Editar operador ${time.id}`} value={editingTime.operador} onChange={(event) => setEditingTime({ ...editingTime, operador: event.target.value })} /> : time.operador || 'N/D'}</td><td>{time.fecha ? new Date(time.fecha).toLocaleDateString('es-ES') : 'N/D'}</td><td>{editingTimeId === time.id ? <><button type="button" className="mini-btn primary" onClick={() => saveAttentionTime(time.id)}>Guardar modificación</button><button type="button" className="mini-btn" onClick={() => setEditingTimeId(null)}>Cancelar</button></> : <button type="button" className="mini-btn" onClick={() => { setEditingTimeId(time.id); setEditingTime({ tiempo_minutos: String(time.tiempo_minutos), operador: time.operador ?? '' }); }}>Editar registro</button>}</td></tr>)}</tbody></table><ListLimit total={attentionTimes.length} label="tiempos" onChange={visibleAttentionTimes.setShowAll} />{attentionTimes.length === 0 && <div className="empty-state"><h4>No hay tiempos registrados</h4><p>Los tiempos guardados aparecerán aquí.</p></div>}
         </section>
         <CommentFilters
           {...filters}
@@ -165,7 +169,7 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
           </div>
 
           <div className="comment-list">
-            {comentarios.map((comment) => (
+            {visibleComments.visibleRecords.map((comment) => (
               <article key={comment.id} className="comment-card">
                 <div className="comment-header">
                   <div>
@@ -188,6 +192,7 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
               </article>
             ))}
           </div>
+          <ListLimit total={comentarios.length} label="comentarios" onChange={visibleComments.setShowAll} />
         </section>
       </div>
     </AppLayout>

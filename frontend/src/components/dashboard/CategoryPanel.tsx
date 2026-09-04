@@ -1,4 +1,6 @@
 import type { CategoryMetric } from '../../types';
+import { useVisibleRecords } from '../../hooks/useVisibleRecords';
+import { ListLimit } from '../ui/ListLimit';
 
 interface CategoryPanelProps {
   items: CategoryMetric[];
@@ -6,6 +8,7 @@ interface CategoryPanelProps {
 }
 
 export function CategoryPanel({ items, onRefresh }: CategoryPanelProps) {
+  const { visibleRecords, showAll, setShowAll } = useVisibleRecords(items);
   return (
     <div className="panel small-panel">
       <div className="panel-header">
@@ -14,7 +17,7 @@ export function CategoryPanel({ items, onRefresh }: CategoryPanelProps) {
       </div>
 
       <div className="category-list">
-        {items.map((item) => (
+        {visibleRecords.map((item) => (
           <div key={item.name} className="category-row">
             <div className="category-name-wrap">
               <span className="category-dot" style={{ background: item.color }} />
@@ -24,6 +27,7 @@ export function CategoryPanel({ items, onRefresh }: CategoryPanelProps) {
           </div>
         ))}
       </div>
+      {items.length > 25 && <ListLimit total={items.length} onChange={setShowAll} />}
     </div>
   );
 }

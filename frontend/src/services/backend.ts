@@ -1,6 +1,7 @@
 import type { ActivityItem, CategoryMetric, ClientRecord, CommentRecord, MetricBar, MetricSnapshot, WordCloudItem } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api';
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const API_URL = configuredApiUrl || (import.meta.env.PROD ? '/api' : 'http://localhost:8000/api');
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {

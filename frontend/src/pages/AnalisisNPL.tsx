@@ -3,6 +3,8 @@ import { useNlpAnalysis } from '../hooks/useNlpAnalysis';
 import { useComentarios } from '../hooks/useComentarios';
 import type { ViewKey } from '../types';
 import { ExportMenu, exportRows, type ExportFormat } from '../utils/exports';
+import { ListLimit } from '../components/ui/ListLimit';
+import { useVisibleRecords } from '../hooks/useVisibleRecords';
 
 interface PageProps {
   activeView?: ViewKey;
@@ -12,6 +14,8 @@ interface PageProps {
 export default function AnalisisNLPPage({ activeView = 'analisisNLP', onSelectView = () => undefined }: PageProps) {
   const { categories, words, reload: reloadNlp } = useNlpAnalysis();
   const { comentarios, reload: reloadComments } = useComentarios();
+  const visibleCategories = useVisibleRecords(categories);
+  const visibleWords = useVisibleRecords(words);
 	const processedRate = comentarios.length ? Math.round(comentarios.filter((item) => item.category !== 'Consulta').length / comentarios.length * 100) : 0;
 	const dominantCategory = categories[0]?.value ?? 0;
   const statusCounts = comentarios.reduce<Record<string, number>>((result, item) => { const key = item.status ?? 'sin estado'; result[key] = (result[key] ?? 0) + 1; return result; }, {});
@@ -68,7 +72,7 @@ export default function AnalisisNLPPage({ activeView = 'analisisNLP', onSelectVi
           </div>
 
           <div className="word-cloud compact">
-            {words.map((item) => (
+            {visibleWords.visibleRecords.map((item) => (
               <span
                 key={item.word}
                 style={{ fontSize: `${Math.min(0.9 + item.size * 0.32, 1.15)}rem` }}
@@ -77,6 +81,7 @@ export default function AnalisisNLPPage({ activeView = 'analisisNLP', onSelectVi
               </span>
             ))}
           </div>
+          <ListLimit total={words.length} label="palabras" onChange={visibleWords.setShowAll} />
         </section>
 
         <section className="panel">
@@ -85,7 +90,7 @@ export default function AnalisisNLPPage({ activeView = 'analisisNLP', onSelectVi
           </div>
 
           <div className="category-list">
-            {categories.map((item) => (
+            {visibleCategories.visibleRecords.map((item) => (
               <div key={item.name} className="category-row">
                 <div className="category-name-wrap">
                   <span className="category-dot" style={{ background: item.color }} />
@@ -95,6 +100,7 @@ export default function AnalisisNLPPage({ activeView = 'analisisNLP', onSelectVi
               </div>
             ))}
           </div>
+          <ListLimit total={categories.length} label="categorías" onChange={visibleCategories.setShowAll} />
         </section>
       </div>
 
@@ -111,7 +117,7 @@ export default function AnalisisNLPPage({ activeView = 'analisisNLP', onSelectVi
         </div>
 
         <div className="insight-grid">
-          {categories.map((item) => (
+          {visibleCategories.visibleRecords.map((item) => (
             <article key={item.name} className="insight-card">
               <div className="insight-head">
                 <strong>{item.name}</strong>
@@ -126,6 +132,7 @@ export default function AnalisisNLPPage({ activeView = 'analisisNLP', onSelectVi
             </article>
           ))}
         </div>
+        <ListLimit total={categories.length} label="categorías" onChange={visibleCategories.setShowAll} />
       </section>
     </AppLayout>
   );
