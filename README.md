@@ -4,7 +4,7 @@ Dashboard empresarial con React, FastAPI, SciPy, NLTK y Supabase.
 
 ## Configuración local
 
-1. Crea `backend/app/.env` a partir de `backend/.env.example`.
+1. Crea `backend/app/.env` con las variables de entorno de Supabase.
 2. Completa `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_KEY` y
 	`SUPABASE_JWT_SECRET` con los valores del proyecto Supabase.
 3. Ejecuta `database/001_schema.sql` y después `database/002_seed.sql` en el
@@ -20,7 +20,7 @@ También informa las tablas requeridas y `schema_ready`; el arranque no ejecuta
 
 ## Producción con Docker
 
-Completa `backend/.env` con las credenciales reales de Supabase y ejecuta:
+Completa `backend/app/.env` con las credenciales reales de Supabase y ejecuta:
 
 ```bash
 docker compose up --build

@@ -13,8 +13,13 @@ export function useDashboardData() {
 
   useEffect(() => {
     let active = true;
-    fetchDashboardSummary().then((summary) => { if (active) { setData(summary); setError(null); } }).catch(() => { if (active) setError('No se pudo cargar el resumen del dashboard.'); });
-    return () => { active = false; };
+    const load = () => {
+      fetchDashboardSummary().then((summary) => { if (active) { setData(summary); setError(null); } }).catch(() => { if (active) setError('No se pudo cargar el resumen del dashboard.'); });
+    };
+    load();
+    const interval = window.setInterval(load, 15000);
+    window.addEventListener('focus', load);
+    return () => { active = false; window.clearInterval(interval); window.removeEventListener('focus', load); };
   }, []);
 
   const kpis: KpiCard[] = data ? [
