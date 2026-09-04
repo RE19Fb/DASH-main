@@ -5,7 +5,7 @@ import type { ViewKey } from '../types';
 import { ExportMenu, exportRows, type ExportFormat } from '../utils/exports';
 import { createComment } from '../services/backend';
 import { useEffect, useState, type FormEvent } from 'react';
-import { fetchClients, createAttentionTime, updateComment } from '../services/backend';
+import { fetchClients, createAttentionTime, fetchAttentionTimes, updateAttentionTime, updateComment } from '../services/backend';
 
 interface PageProps {
   activeView?: ViewKey;
@@ -17,7 +17,13 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
   const [clients, setClients] = useState<Array<{ id: number; nombre: string }>>([]);
   const [newComment, setNewComment] = useState({ contenido: '', canal: 'web', cliente_id: '', estado: 'pendiente', tiempo_minutos: '', operador: '' });
   const [commentMessage, setCommentMessage] = useState('');
+  const [showCommentForm, setShowCommentForm] = useState(false);
+  const [attentionTimes, setAttentionTimes] = useState<Array<{ id: number; cliente_id?: number; comentario_id?: number; tiempo_minutos: number; fecha: string; operador?: string }>>([]);
+  const [editingTimeId, setEditingTimeId] = useState<number | null>(null);
+  const [editingTime, setEditingTime] = useState({ tiempo_minutos: '', operador: '' });
   useEffect(() => { void fetchClients().then((items) => setClients(items.map((item) => ({ id: item.id, nombre: item.name })))).catch(() => setClients([])); }, []);
+  const loadAttentionTimes = () => { void fetchAttentionTimes().then(setAttentionTimes).catch(() => setAttentionTimes([])); };
+  useEffect(() => { loadAttentionTimes(); }, []);
   const saveComment = (event: FormEvent) => {
     event.preventDefault();
     if (!newComment.contenido.trim()) {
@@ -47,9 +53,12 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
     }).then(() => {
       setCommentMessage('Comentario guardado, procesado por NLTK y registrado en Atención.');
       setNewComment({ contenido: '', canal: 'web', cliente_id: '', estado: 'pendiente', tiempo_minutos: '', operador: '' });
+      setShowCommentForm(false);
+      loadAttentionTimes();
       return reload();
     }).catch(() => setCommentMessage('No se pudo guardar el comentario o su tiempo.'));
   };
+  const saveAttentionTime = (id: number) => { void updateAttentionTime(id, { tiempo_minutos: Number(editingTime.tiempo_minutos), operador: editingTime.operador.trim() || undefined }).then(() => { setEditingTimeId(null); loadAttentionTimes(); setCommentMessage('Tiempo de atención actualizado.'); }).catch(() => setCommentMessage('No se pudo actualizar el tiempo de atención.')); };
   const exportar = (format: ExportFormat) => exportRows([['Cliente', 'Categoría', 'Sentimiento', 'Comentario'], ...comentarios.map((item) => [item.client, item.category, item.sentiment, item.text])], format, 'comentarios');
   return (
     <AppLayout activeView={activeView} onSelectView={onSelectView}>
@@ -94,9 +103,10 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
       </div>
 
       <div className="content-stack">
-        <form className="panel attention-form" onSubmit={saveComment}>
+        {showCommentForm && <form className="panel attention-form" onSubmit={saveComment}>
           <div className="panel-header">
-            <h3>NUEVA ATENCIÓN</h3>
+            <h3>NUEVO REGISTRO DE ATENCIÓN</h3>
+            <span className="form-note">El estado del comentario se clasifica automáticamente.</span>
           </div>
 
           <div className="attention-form-grid">
@@ -121,7 +131,7 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
             </div>
 
             <div className="field-group">
-              <label htmlFor="comentario-tiempo">Tiempo de atención (min)</label>
+              <label htmlFor="comentario-tiempo">Nuevo tiempo de atención (min)</label>
               <input id="comentario-tiempo" type="number" min="0" step="0.01" placeholder="Ej. 12.5" value={newComment.tiempo_minutos} onChange={(event) => setNewComment({ ...newComment, tiempo_minutos: event.target.value })} />
             </div>
 
@@ -132,10 +142,14 @@ export default function ComentariosPage({ activeView = 'comentarios', onSelectVi
           </div>
 
           <div className="attention-actions">
-            <button type="submit" className="mini-btn primary">Guardar atención</button>
+            <button type="submit" className="mini-btn primary">Guardar atención</button><button type="button" className="mini-btn" onClick={() => setShowCommentForm(false)}>Cancelar</button>
             {commentMessage && <span className="card-detail">{commentMessage}</span>}
           </div>
-        </form>
+        </form>}
+        <section className="panel table-panel">
+          <div className="panel-header"><h3>TIEMPOS DE ATENCIÓN REGISTRADOS</h3><div className="header-actions"><button type="button" className="mini-btn primary" onClick={() => setShowCommentForm(true)}>Nuevo registro de atención</button><button type="button" className="mini-btn" onClick={loadAttentionTimes}>Actualizar</button></div></div>
+          <table className="data-table"><thead><tr><th>ID</th><th>Cliente</th><th>Comentario</th><th>Tiempo registrado</th><th>Operador</th><th>Fecha de creación</th><th>Acciones</th></tr></thead><tbody>{attentionTimes.map((time) => <tr key={time.id}><td>{time.id}</td><td>{time.cliente_id ?? 'N/D'}</td><td>{time.comentario_id ?? 'N/D'}</td><td>{editingTimeId === time.id ? <><span className="inline-label">Editar tiempo de atención</span><input aria-label={`Editar tiempo de atención ${time.id}`} type="number" min="0" step="0.01" value={editingTime.tiempo_minutos} onChange={(event) => setEditingTime({ ...editingTime, tiempo_minutos: event.target.value })} /></> : `${time.tiempo_minutos} min`}</td><td>{editingTimeId === time.id ? <input aria-label={`Editar operador ${time.id}`} value={editingTime.operador} onChange={(event) => setEditingTime({ ...editingTime, operador: event.target.value })} /> : time.operador || 'N/D'}</td><td>{time.fecha ? new Date(time.fecha).toLocaleDateString('es-ES') : 'N/D'}</td><td>{editingTimeId === time.id ? <><button type="button" className="mini-btn primary" onClick={() => saveAttentionTime(time.id)}>Guardar modificación</button><button type="button" className="mini-btn" onClick={() => setEditingTimeId(null)}>Cancelar</button></> : <button type="button" className="mini-btn" onClick={() => { setEditingTimeId(time.id); setEditingTime({ tiempo_minutos: String(time.tiempo_minutos), operador: time.operador ?? '' }); }}>Editar registro</button>}</td></tr>)}</tbody></table>{attentionTimes.length === 0 && <div className="empty-state"><h4>No hay tiempos registrados</h4><p>Los tiempos guardados aparecerán aquí.</p></div>}
+        </section>
         <CommentFilters
           {...filters}
           onSearchChange={(search) => setFilters((current) => ({ ...current, search }))}

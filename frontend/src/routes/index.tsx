@@ -4,7 +4,6 @@ import ClientesPage from '../pages/Clientes';
 import ComentariosPage from '../pages/Comentarios';
 import AnalisisNLPPage from '../pages/AnalisisNPL';
 import MetricasPage from '../pages/Metricas';
-import OptimizacionPage from '../pages/Oprimización';
 import ReportesPage from '../pages/Reportes';
 import ConfiguracionPage from '../pages/Configuracion';
 
@@ -22,8 +21,6 @@ export const renderPage = (view: ViewKey, onSelectView: (view: ViewKey) => void)
       return <AnalisisNLPPage {...props} />;
     case 'metricas':
       return <MetricasPage {...props} />;
-    case 'optimizacion':
-      return <OptimizacionPage {...props} />;
     case 'reportes':
       return <ReportesPage {...props} />;
     case 'configuracion':

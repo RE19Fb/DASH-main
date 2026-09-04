@@ -7,6 +7,10 @@ export function useDashboardData() {
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const reload = () => {
+    void fetchDashboardSummary().then((summary) => { setData(summary); setError(null); }).catch(() => setError('No se pudo cargar el resumen del dashboard.'));
+  };
+
   useEffect(() => {
     let active = true;
     fetchDashboardSummary().then((summary) => { if (active) { setData(summary); setError(null); } }).catch(() => { if (active) setError('No se pudo cargar el resumen del dashboard.'); });
@@ -20,5 +24,5 @@ export function useDashboardData() {
     { label: 'Procesados', value: `${data.porcentaje_procesados}%`, detail: 'Cobertura actual', trend: '', tone: 'positive' },
   ] : [];
 
-  return { data, error, kpis, categories: data?.categorias ?? [], activity: data?.actividad ?? [], metrics: data?.metricas ?? [], words: data?.palabras ?? [], trend: data?.tendencia_tiempos ?? [] };
+  return { data, error, kpis, categories: data?.categorias ?? [], activity: data?.actividad ?? [], metrics: data?.metricas ?? [], words: data?.palabras ?? [], trend: data?.tendencia_tiempos ?? [], reload };
 }

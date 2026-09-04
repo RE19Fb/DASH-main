@@ -11,6 +11,14 @@ class TiempoAtencionCreate(BaseModel):
     operador: str | None = None
 
 
+class TiempoAtencionUpdate(BaseModel):
+    cliente_id: int | None = None
+    comentario_id: int | None = None
+    tiempo_minutos: float | None = Field(default=None, ge=0)
+    fecha: date | None = None
+    operador: str | None = None
+
+
 class TiempoAtencionResponse(TiempoAtencionCreate):
     id: int
     fecha: date

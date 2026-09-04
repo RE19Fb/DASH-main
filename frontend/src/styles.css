@@ -262,6 +262,23 @@ select, .config-form input, .config-form select {
   flex: 1;
 }
 
+.config-form input[type='checkbox'] {
+  min-width: auto;
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0;
+}
+
+.data-table input {
+  min-width: 7rem;
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
 .config-form textarea {
   flex: 1;
   min-width: 240px;
@@ -279,10 +296,37 @@ select, .config-form input, .config-form select {
   align-items: center;
 }
 
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.filter-field span,
+.form-note,
+.inline-label {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .filter-row input,
 .filter-row select {
   width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--black);
+  padding: 10px 12px;
 }
+
+.comment-filters { background: linear-gradient(180deg, #ffffff 0%, #f7faf8 100%); }
+
+.form-note { margin-left: auto; text-align: right; }
 
 .attention-form {
   background: linear-gradient(180deg, #ffffff 0%, #f9fbfa 100%);
@@ -510,6 +554,26 @@ select, .config-form input, .config-form select {
   font-weight: 800;
 }
 
+.scientific-section {
+  margin-top: 26px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.section-heading {
+  margin-bottom: 18px;
+}
+
+.section-heading h2 {
+  margin: 4px 0 6px;
+  font-size: 1.25rem;
+}
+
+.section-heading p {
+  margin: 0;
+  color: var(--muted);
+}
+
 .mini-btn {
   border: 1px solid #d7e1db;
   background: linear-gradient(180deg, #ffffff, #f7faf8);
@@ -639,6 +703,44 @@ select, .config-form input, .config-form select {
   border-radius: inherit;
   background: linear-gradient(90deg, #57d694 0%, #2d9d6f 35%, #123f35 100%);
 }
+
+.bars span.is-empty { background: #cbd8d1; }
+
+.scientific-chart {
+  min-height: 190px;
+  padding: 18px 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: repeating-linear-gradient(to bottom, #f7faf8 0, #f7faf8 47px, #e8efeb 48px);
+}
+
+.scientific-bars, .distribution-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 10px;
+  height: 160px;
+}
+
+.scientific-bar {
+  flex: 1;
+  min-width: 12px;
+  max-width: 42px;
+  border-radius: 5px 5px 0 0;
+  background: linear-gradient(180deg, #57d694, #147a52);
+  position: relative;
+  transition: height 240ms ease;
+}
+
+.scientific-bar.is-empty { background: #cbd8d1; }
+.scientific-bar span { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); color: var(--muted); font-size: 0.68rem; margin-bottom: 4px; }
+
+.distribution-chart { margin-top: 22px; padding-top: 4px; border-top: 1px solid var(--line); }
+.distribution-bars { height: 150px; align-items: flex-end; }
+.distribution-bar { flex: 1; max-width: 72px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; color: var(--muted); font-size: 0.68rem; }
+.distribution-bar i { width: min(34px, 70%); min-height: 0; border-radius: 5px 5px 0 0; background: #3a6ea8; transition: height 240ms ease; }
+.distribution-bar.is-empty i { background: #cbd8d1; }
+.distribution-bar small { font-size: 0.68rem; }
 
 .activity-list { display: flex; flex-direction: column; gap: 14px; }
 

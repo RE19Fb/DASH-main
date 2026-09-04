@@ -9,7 +9,7 @@ interface PageProps {
 }
 
 export default function ReportesPage({ activeView = 'reportes', onSelectView = () => undefined }: PageProps) {
-  const { kpis, metrics } = useDashboardData();
+  const { kpis, metrics, reload } = useDashboardData();
   const reportRows = kpis.map((item) => ({ name: item.label, value: item.value, change: item.trend || 'Actual' }));
   const exportar = (format: ExportFormat) => exportRows([['Indicador', 'Valor', 'Cambio'], ...reportRows.map((row) => [row.name, row.value, row.change])], format, 'reporte');
   return (
@@ -21,7 +21,7 @@ export default function ReportesPage({ activeView = 'reportes', onSelectView = (
         </div>
         <div className="header-actions">
           <ExportMenu onExport={exportar} />
-          <button type="button" className="chip highlight" onClick={() => window.location.reload()}>Actualizar informe</button>
+          <button type="button" className="chip highlight" onClick={reload}>Actualizar informe</button>
         </div>
       </header>
 

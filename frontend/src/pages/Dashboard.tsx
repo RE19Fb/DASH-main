@@ -16,20 +16,19 @@ interface DashboardProps {
 }
 
 export default function DashboardPage({ activeView = 'dashboard', onSelectView = () => undefined }: DashboardProps) {
-  const { kpis: overview, categories, activity, metrics, words, trend, error } = useDashboardData();
-  const refresh = () => window.location.reload();
+  const { kpis: overview, categories, activity, metrics, words, trend, error, reload } = useDashboardData();
   const exportar = (format: ExportFormat) => exportRows([['Indicador', 'Valor'], ...overview.map((card) => [card.label, card.value])], format, 'dashboard');
 
   return (
     <AppLayout activeView={activeView} onSelectView={onSelectView}>
-      <HeaderPanel onRefresh={refresh} />
+      <HeaderPanel onRefresh={reload} />
       <div className="dashboard-export"><ExportMenu onExport={exportar} /></div>
       {error && <div className="panel error-panel">{error}</div>}
       <OverviewCards cards={overview} />
 
       <section className="two-col-grid">
     <TrendChart values={trend} onDetail={() => onSelectView('metricas')} />
-    <CategoryPanel items={categories} onRefresh={refresh} />
+    <CategoryPanel items={categories} onRefresh={reload} />
       </section>
 
       <section className="bottom-grid">
@@ -38,7 +37,7 @@ export default function DashboardPage({ activeView = 'dashboard', onSelectView =
       </section>
 
       <section className="activity-grid">
-    <ActivityPanel items={activity} />
+    <ActivityPanel items={activity} onRefresh={reload} />
       </section>
     </AppLayout>
   );

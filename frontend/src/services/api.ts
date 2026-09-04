@@ -6,7 +6,6 @@ export const menuItems: Array<{ key: ViewKey; label: string; icon: string; accen
   { key: 'comentarios', label: 'Atención', icon: '☰', accent: '#ffd899' },
   { key: 'analisisNLP', label: 'Inteligencia NLP', icon: '✦', accent: '#b7d4ff' },
   { key: 'metricas', label: 'Scientific Data', icon: '◔', accent: '#9edfc7' },
-  { key: 'optimizacion', label: 'Optimización', icon: '↗', accent: '#c6e6a8' },
   { key: 'reportes', label: 'Reportes', icon: '▤', accent: '#ffb9b9' },
   { key: 'configuracion', label: 'Configuración', icon: '⚙', accent: '#f7c3a5' },
 ];

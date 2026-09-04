@@ -29,49 +29,17 @@ export function CommentFilters({
   onDateToChange,
 }: CommentFiltersProps) {
   return (
-    <div className="panel">
+    <div className="panel comment-filters">
       <div className="panel-header">
         <h3>FILTROS</h3>
       </div>
 
       <div className="filter-row">
-        <input
-          type="text"
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Buscar cliente o comentario"
-          className="search-input-wrap"
-        />
-
-        <input
-          type="date"
-          value={dateFrom}
-          onChange={(event) => onDateFromChange(event.target.value)}
-          aria-label="Fecha de inicio"
-        />
-
-        <input
-          type="date"
-          value={dateTo}
-          onChange={(event) => onDateToChange(event.target.value)}
-          aria-label="Fecha de fin"
-        />
-
-        <select value={sentiment} onChange={(event) => onSentimentChange(event.target.value as 'all' | CommentRecord['sentiment'])}>
-          {sentimentOptions.map((option) => (
-            <option key={option} value={option}>
-              {option === 'all' ? 'Todos los sentimientos' : option}
-            </option>
-          ))}
-        </select>
-
-        <select value={category} onChange={(event) => onCategoryChange(event.target.value as 'all' | CommentRecord['category'])}>
-          {categoryOptions.map((option) => (
-            <option key={option} value={option}>
-              {option === 'all' ? 'Todas las categorías' : option}
-            </option>
-          ))}
-        </select>
+        <label className="filter-field"><span>Buscar</span><input type="text" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Buscar cliente o comentario" /></label>
+        <label className="filter-field"><span>Desde</span><input type="date" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} aria-label="Fecha de inicio" /></label>
+        <label className="filter-field"><span>Hasta</span><input type="date" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} aria-label="Fecha de fin" /></label>
+        <label className="filter-field"><span>Estado del comentario</span><select value={sentiment} onChange={(event) => onSentimentChange(event.target.value as 'all' | CommentRecord['sentiment'])}>{sentimentOptions.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todos los estados' : option}</option>)}</select></label>
+        <label className="filter-field"><span>Categoría</span><select value={category} onChange={(event) => onCategoryChange(event.target.value as 'all' | CommentRecord['category'])}>{categoryOptions.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas las categorías' : option}</option>)}</select></label>
       </div>
     </div>
   );

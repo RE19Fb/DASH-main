@@ -4,8 +4,9 @@ interface TrendChartProps {
 }
 
 export function TrendChart({ values = [], onDetail }: TrendChartProps) {
-  const maximum = Math.max(...values, 1);
-  const bars = values.map((value) => Math.max(4, value / maximum * 100));
+  const chartValues = values.length ? values : Array.from({ length: 8 }, () => 0);
+  const maximum = Math.max(...chartValues, 1);
+  const bars = chartValues.map((value) => value ? Math.max(8, value / maximum * 100) : 0);
 
   return (
     <div className="panel large-panel">
@@ -18,7 +19,7 @@ export function TrendChart({ values = [], onDetail }: TrendChartProps) {
         <div className="grid-lines" />
         <div className="bars">
           {bars.map((height, index) => (
-            <span key={index} style={{ height: `${height}%` }} />
+            <span key={index} className={height === 0 ? 'is-empty' : ''} style={{ height: `${height}%` }} />
           ))}
         </div>
       </div>

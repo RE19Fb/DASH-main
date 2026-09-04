@@ -10,8 +10,8 @@ interface PageProps {
 }
 
 export default function AnalisisNLPPage({ activeView = 'analisisNLP', onSelectView = () => undefined }: PageProps) {
-  const { categories, words } = useNlpAnalysis();
-  const { comentarios } = useComentarios();
+  const { categories, words, reload: reloadNlp } = useNlpAnalysis();
+  const { comentarios, reload: reloadComments } = useComentarios();
 	const processedRate = comentarios.length ? Math.round(comentarios.filter((item) => item.category !== 'Consulta').length / comentarios.length * 100) : 0;
 	const dominantCategory = categories[0]?.value ?? 0;
   const statusCounts = comentarios.reduce<Record<string, number>>((result, item) => { const key = item.status ?? 'sin estado'; result[key] = (result[key] ?? 0) + 1; return result; }, {});
@@ -27,8 +27,7 @@ export default function AnalisisNLPPage({ activeView = 'analisisNLP', onSelectVi
           <h1>Análisis NLP</h1>
         </div>
         <div className="header-actions">
-          <button type="button" className="chip" onClick={() => window.location.reload()}>Actualizar</button>
-          <button type="button" className="chip highlight" onClick={() => window.location.reload()}>Actualizar análisis</button>
+          <button type="button" className="chip highlight" onClick={() => { reloadNlp(); reloadComments(); }}>Actualizar análisis</button>
         </div>
       </header>
       <div className="dashboard-export"><ExportMenu onExport={exportar} /></div>

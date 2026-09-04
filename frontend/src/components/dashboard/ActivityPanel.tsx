@@ -2,14 +2,15 @@ import type { ActivityItem } from '../../types';
 
 interface ActivityPanelProps {
   items: ActivityItem[];
+  onRefresh?: () => void;
 }
 
-export function ActivityPanel({ items }: ActivityPanelProps) {
+export function ActivityPanel({ items, onRefresh }: ActivityPanelProps) {
   return (
     <div className="panel activity-panel">
       <div className="panel-header">
         <h3>ACTIVIDAD RECIENTE</h3>
-        <button type="button" className="mini-btn" onClick={() => window.location.reload()}>Actualizar</button>
+        <button type="button" className="mini-btn" onClick={onRefresh}>Actualizar</button>
       </div>
 
       <div className="activity-list">

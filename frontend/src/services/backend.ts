@@ -11,7 +11,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-type ApiClient = { id: number; nombre: string; email?: string; telefono?: string; empresa?: string; activo: boolean };
+type ApiClient = { id: number; nombre: string; email?: string; telefono?: string; empresa?: string; activo: boolean; created_at?: string; updated_at?: string };
 type ApiComment = { id: number; cliente_id?: number; contenido: string; canal: string; categoria?: string; procesado: boolean; estado: string; fecha: string };
 
 const categoryToUi = (category?: string): CommentRecord['category'] => {
@@ -29,6 +29,8 @@ export async function fetchClients(): Promise<ClientRecord[]> {
     company: client.empresa ?? 'Sin empresa',
     email: client.email ?? '',
     telefono: client.telefono ?? '',
+    createdAt: client.created_at,
+    updatedAt: client.updated_at,
     status: client.activo ? 'Activo' : 'Pendiente',
     satisfaction: 0,
     segment: 'General',
@@ -59,7 +61,6 @@ export async function fetchComments(): Promise<CommentRecord[]> {
     id: comment.id,
     client: comment.cliente_id ? clientNames.get(comment.cliente_id) ?? `Cliente #${comment.cliente_id}` : 'Sin cliente',
     sentiment: comment.categoria === 'RECLAMO' ? 'Negativo' : comment.categoria === 'FELICITACION' ? 'Positivo' : 'Neutral',
-<<<<<<< HEAD
     category: categoryToUi(comment.categoria),
     text: comment.contenido,
     rating: 0,
@@ -72,14 +73,6 @@ export async function fetchComments(): Promise<CommentRecord[]> {
 }
 
 export function createComment(payload: { contenido: string; canal: string; cliente_id?: number; estado?: string }): Promise<{ id: number }> {
-=======
-    category: categoryToUi(comment.categoria), text: comment.contenido, rating: 0,
-    source: comment.canal, priority: comment.categoria === 'RECLAMO' ? 'Alta' : 'Media', status: comment.estado, date: comment.fecha, responseTime: responseTimes.has(comment.id) ? `${responseTimes.get(comment.id)} min` : 'Sin registrar',
-  }));
-}
-
-export function createComment(payload: { contenido: string; canal: string; cliente_id?: number; estado?: string }) {
->>>>>>> 27d17fb (Ajuste)
   return request<{ id: number }>('/comentarios/', { method: 'POST', body: JSON.stringify(payload) });
 }
 
@@ -89,6 +82,10 @@ export function updateComment(id: number, payload: { estado?: string; canal?: st
 
 export function createAttentionTime(payload: { cliente_id?: number; comentario_id?: number; tiempo_minutos: number; operador?: string }) {
   return request('/tiempos-atencion/', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export function updateAttentionTime(id: number, payload: { tiempo_minutos?: number; operador?: string; fecha?: string }) {
+  return request(`/tiempos-atencion/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
 }
 
 export function analyzeText(texto: string) {
